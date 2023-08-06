@@ -1,0 +1,11 @@
+body {
+    background-color: rgb(46, 47, 49);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#mainCanvas {
+    border: 0px solid black;
+
+}
