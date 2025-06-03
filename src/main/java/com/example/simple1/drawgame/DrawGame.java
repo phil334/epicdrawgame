@@ -15,7 +15,7 @@ public class DrawGame {
 
     private static final String GAME_TYPE = "CLICK";//"MOVE";
     private static final int COORDS_ROWS = GAME_TYPE.equals("MOVE") ? 40 : 10;
-    private static final int COORDS_COLS = GAME_TYPE.equals("MOVE ") ? 80 : 20;
+    private static final int COORDS_COLS = GAME_TYPE.equals("MOVE") ? 80 : 20;
     private static final int TOTAL_FIELDS = COORDS_ROWS * COORDS_COLS;
     private static final double WIN_THRESHOLD = 0.5;
 
