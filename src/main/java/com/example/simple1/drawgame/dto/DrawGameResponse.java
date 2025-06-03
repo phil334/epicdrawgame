@@ -52,4 +52,11 @@ public class DrawGameResponse {
             double score
     ) {
     }
+
+    public record ActiveLobbyDto(
+            int lobbyId,
+            String lobbyName,
+            int playerCount
+    ) {
+    }
 }

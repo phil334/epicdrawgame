@@ -39,6 +39,8 @@ const gameState = {
     fetchGameStateInterval: null
 }
 
+let activeLobbies = [];
+
 const playBeep = frequency => {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -187,6 +189,14 @@ const renderLobbyMenu = () => {
         context.strokeRect(item.x(), item.y(), item.width, item.height);
         context.fillText(item.text(), item.x() + item.width / 2, item.y() + item.height / 2);
     });
+
+    // active lobbies list
+    context.textAlign = 'left';
+    let lY = canvas.height / 2 + canvasState.tileSize * 8;
+    activeLobbies.forEach(lobby => {
+        context.fillText(`ID ${lobby.lobbyId}: ${lobby.lobbyName} (${lobby.playerCount}/2)`, canvasState.tileSize, lY);
+        lY += canvasState.tileSize * 3;
+    });
 }
 
 const renderGameBackground = timestamp => {
@@ -228,6 +238,19 @@ const renderScore = () => {
     context.strokeStyle = 'black';
     context.lineWidth = 4;
     context.strokeRect(2, 2, bounding.width - 4, canvasState.topOffset - 4)
+
+    // Back button
+    context.beginPath();
+    context.fillStyle = '#bec2ed';
+    context.fillRect(canvasState.tileSize, canvasState.tileSize, canvasState.tileSize * 8, canvasState.tileSize * 3);
+    context.strokeStyle = 'black';
+    context.lineWidth = 4;
+    context.strokeRect(canvasState.tileSize, canvasState.tileSize, canvasState.tileSize * 8, canvasState.tileSize * 3);
+    context.font = `${Math.round(canvasState.tileSize * 2)}px monospace`;
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('Back', canvasState.tileSize * 5, canvasState.tileSize * 2.5);
 
     let textX = canvasState.tileSize * 12;
     let textY = canvasState.tileSize * 3;
@@ -363,6 +386,12 @@ const fetchLobbyAndGameState = async () => {
         });
 }
 
+const fetchActiveLobbies = () => {
+    return fetch(SERVER_ADDRESS + '/epic-draw/active-lobbies')
+        .then(response => response.json())
+        .then(data => { activeLobbies = data; });
+}
+
 
 const fieldPlaceRequest = (updatedCoords) => {
     lobbyState.stompClient.send(
@@ -423,6 +452,17 @@ const handleGameClick = event => {
     const bounding = canvas.getBoundingClientRect();
     const x = event.clientX - bounding.left;
     const y = event.clientY - bounding.top;
+
+    const backBox = {
+        x: canvasState.tileSize,
+        y: canvasState.tileSize,
+        width: canvasState.tileSize * 8,
+        height: canvasState.tileSize * 3
+    };
+    if (x >= backBox.x && x <= backBox.x + backBox.width && y >= backBox.y && y <= backBox.y + backBox.height) {
+        handleLobbyLeave();
+        return;
+    }
 
     const col_idx = Math.floor(x / (4 * canvasState.tileSize));
     const row_idx = Math.floor((y - canvasState.topOffset) / (4 * canvasState.tileSize));
@@ -542,3 +582,6 @@ renderCanvas();
 
 window.addEventListener('resize', renderCanvas);
 canvas.addEventListener('click', handleMenuClick);
+
+fetchActiveLobbies();
+setInterval(fetchActiveLobbies, 5000);
