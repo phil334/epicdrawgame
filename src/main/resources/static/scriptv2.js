@@ -39,6 +39,14 @@ const gameState = {
     fetchGameStateInterval: null
 }
 
+// special ability state
+const abilityState = {
+    cooldown: 10000,
+    lastUsed: 0
+};
+
+const mousePos = {x: 0, y: 0};
+
 const playBeep = frequency => {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -264,6 +272,27 @@ const renderScore = () => {
         textX += canvasState.tileSize * 38;
     }
 
+    // special ability cooldown bar
+    const percent = Math.min(1, (Date.now() - abilityState.lastUsed) / abilityState.cooldown);
+    const barWidth = canvasState.tileSize * 20;
+    const barHeight = canvasState.tileSize * 2;
+    const barX = canvasState.tileSize * 2;
+    const barY = canvasState.tileSize * 7;
+
+    context.beginPath();
+    context.fillStyle = 'grey';
+    context.fillRect(barX, barY, barWidth, barHeight);
+    context.fillStyle = percent >= 1 ? '#1ceb80' : '#bec2ed';
+    context.fillRect(barX, barY, barWidth * percent, barHeight);
+    context.lineWidth = 4;
+    context.strokeStyle = 'black';
+    context.strokeRect(barX, barY, barWidth, barHeight);
+    context.font = `${Math.round(canvasState.tileSize * 2)}px monospace`;
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    const text = percent >= 1 ? 'Special Ready (SPACE)' : `${Math.ceil((abilityState.cooldown - (Date.now() - abilityState.lastUsed)) / 1000)}s`;
+    context.fillText(text, barX + barWidth / 2, barY + barHeight / 2 + canvasState.tileSize * 0.3);
+
 };
 
 const renderAllFields = () => {
@@ -437,6 +466,39 @@ const handleGameClick = event => {
     playTileClaimSound();
 };
 
+const handleMouseMove = event => {
+    const bounding = canvas.getBoundingClientRect();
+    mousePos.x = event.clientX - bounding.left;
+    mousePos.y = event.clientY - bounding.top;
+};
+
+const handleSpecialAbility = event => {
+    if (event.code !== 'Space') return;
+    if (Date.now() - abilityState.lastUsed < abilityState.cooldown) return;
+
+    const col_idx = Math.floor(mousePos.x / (4 * canvasState.tileSize));
+    const row_idx = Math.floor((mousePos.y - canvasState.topOffset) / (4 * canvasState.tileSize));
+
+    if (col_idx < 0 || row_idx < 0 || row_idx >= gameState.coords.length || col_idx >= gameState.coords[0].length) {
+        return;
+    }
+
+    const updates = [];
+    for (let r = row_idx - 1; r <= row_idx + 1; r++) {
+        for (let c = col_idx - 1; c <= col_idx + 1; c++) {
+            if (r < 0 || c < 0 || r >= gameState.coords.length || c >= gameState.coords[0].length) continue;
+            if (gameState.coords[r][c] === lobbyState.playerId) continue;
+            updates.push({row: r, col: c});
+        }
+    }
+
+    if (updates.length > 0) {
+        fieldPlaceRequest(updates);
+        abilityState.lastUsed = Date.now();
+        playTileClaimSound();
+    }
+};
+
 const handleGameStateUpdateMessage = message => {
     // TODO wait for fetchLobbyAndGameState to be complete
     const messageBody = JSON.parse(message.body);
@@ -471,6 +533,8 @@ const handleLobbyLeave = () => {
         history.pushState(null, '', '/epic-draw');
     }
     removeEventListener('click', handleGameClick);
+    removeEventListener('mousemove', handleMouseMove);
+    removeEventListener('keydown', handleSpecialAbility);
     canvas.addEventListener('click', handleMenuClick);
     renderCanvas();
 }
@@ -518,6 +582,8 @@ const startGame = () => {
             }
             canvas.removeEventListener('click', handleMenuClick);
             canvas.addEventListener('click', handleGameClick);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            addEventListener('keydown', handleSpecialAbility);
 
             renderCanvas();
             renderGameBackground();
