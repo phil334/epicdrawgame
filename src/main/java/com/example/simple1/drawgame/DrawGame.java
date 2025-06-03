@@ -61,6 +61,11 @@ public class DrawGame {
     public synchronized void changeCoord(int playerId, int row, int col) {
         if (gameIsOver) return;
 
+        if (row < 0 || row >= coords.length || col < 0 || col >= coords[0].length) {
+            throw new BadRequestException(
+                    "Coordinates (%d,%d) are outside the board in lobby '%d'".formatted(row, col, gameId));
+        }
+
         if (coords[row][col] == 1) player1Fields--;
         else if (coords[row][col] == 2) player2Fields--;
 
