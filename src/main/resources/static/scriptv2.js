@@ -199,13 +199,14 @@ const renderLobbyMenu = () => {
     let lY = canvas.height / 2 + canvasState.tileSize * 8;
     joinButtons.length = 0;
     activeLobbies.forEach(lobby => {
+        const curLY = lY; // capture current y value for button position
         const text = `ID ${lobby.lobbyId}: ${lobby.lobbyName} (${lobby.playerCount}/2)`;
-        context.fillText(text, canvasState.tileSize, lY);
+        context.fillText(text, canvasState.tileSize, curLY);
 
         const btn = {
             lobbyId: lobby.lobbyId,
             x: () => canvas.width - canvasState.tileSize * 10,
-            y: () => lY - canvasState.tileSize * 1.5,
+            y: () => curLY - canvasState.tileSize * 1.5,
             width: canvasState.tileSize * 8,
             height: canvasState.tileSize * 3
         };
@@ -419,7 +420,12 @@ const fetchLobbyAndGameState = async () => {
 const fetchActiveLobbies = () => {
     return fetch(SERVER_ADDRESS + '/epic-draw/active-lobbies')
         .then(response => response.json())
-        .then(data => { activeLobbies = data; });
+        .then(data => {
+            activeLobbies = data;
+            if (canvasState.currentViewMode !== ViewMode.IN_GAME) {
+                renderLobbyMenu();
+            }
+        });
 }
 
 
