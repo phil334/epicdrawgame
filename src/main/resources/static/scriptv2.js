@@ -419,7 +419,12 @@ const fetchLobbyAndGameState = async () => {
 const fetchActiveLobbies = () => {
     return fetch(SERVER_ADDRESS + '/epic-draw/active-lobbies')
         .then(response => response.json())
-        .then(data => { activeLobbies = data; });
+        .then(data => {
+            activeLobbies = data;
+            if (canvasState.currentViewMode !== ViewMode.IN_GAME) {
+                renderLobbyMenu();
+            }
+        });
 }
 
 
