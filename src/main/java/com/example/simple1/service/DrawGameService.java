@@ -127,6 +127,7 @@ public class DrawGameService {
 
     public List<ActiveLobbyDto> getActiveLobbies() {
         return lobbyIdToGame.values().stream()
+                .sorted((g1, g2) -> Integer.compare(g1.getGameId(), g2.getGameId()))
                 .map(game -> new ActiveLobbyDto(game.getGameId(), game.getLobbyName(), game.getPlayers().size()))
                 .toList();
     }

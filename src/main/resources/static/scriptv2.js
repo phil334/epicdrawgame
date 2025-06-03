@@ -40,6 +40,7 @@ const gameState = {
 }
 
 let activeLobbies = [];
+const joinButtons = [];
 
 const playBeep = frequency => {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -196,8 +197,34 @@ const renderLobbyMenu = () => {
     // active lobbies list
     context.textAlign = 'left';
     let lY = canvas.height / 2 + canvasState.tileSize * 8;
+    joinButtons.length = 0;
     activeLobbies.forEach(lobby => {
-        context.fillText(`ID ${lobby.lobbyId}: ${lobby.lobbyName} (${lobby.playerCount}/2)`, canvasState.tileSize, lY);
+        const text = `ID ${lobby.lobbyId}: ${lobby.lobbyName} (${lobby.playerCount}/2)`;
+        context.fillText(text, canvasState.tileSize, lY);
+
+        const btn = {
+            lobbyId: lobby.lobbyId,
+            x: () => canvas.width - canvasState.tileSize * 10,
+            y: () => lY - canvasState.tileSize * 1.5,
+            width: canvasState.tileSize * 8,
+            height: canvasState.tileSize * 3
+        };
+        const bx = btn.x();
+        const by = btn.y();
+        context.beginPath();
+        context.fillStyle = '#bec2ed';
+        context.fillRect(bx, by, btn.width, btn.height);
+        context.strokeStyle = 'black';
+        context.lineWidth = 4;
+        context.strokeRect(bx, by, btn.width, btn.height);
+        context.fillStyle = 'black';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText('Join', bx + btn.width / 2, by + btn.height / 2);
+
+        joinButtons.push(btn);
+
+        context.textAlign = 'left'; // reset for next text
         lY += canvasState.tileSize * 3;
     });
 }
@@ -449,6 +476,17 @@ const handleMenuClick = event => {
         .filter(item => item.viewMode === canvasState.currentViewMode)
         .filter(item => isIntersect(pos, item))
         .forEach(item => item.onclick());
+
+    joinButtons
+        .filter(btn => isIntersect(pos, btn))
+        .forEach(btn => {
+            if (!canvasState.input.username || canvasState.input.username === 'Enter username') {
+                canvasState.input.username = prompt('Please enter your username');
+                renderLobbyMenu();
+                return;
+            }
+            joinGameRequest(btn.lobbyId, canvasState.input.username);
+        });
 };
 
 const handleGameClick = event => {
