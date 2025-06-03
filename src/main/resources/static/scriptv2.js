@@ -165,7 +165,9 @@ const renderLobbyMenu = () => {
     context.textBaseline = 'middle';
 
     context.beginPath();
-    context.font = 'bold 90px monospace';
+    // Scale the menu title with the current tile size so that it stays
+    // readable on lower resolutions.
+    context.font = `bold ${Math.round(canvasState.tileSize * 7.5)}px monospace`;
     context.fillStyle = 'black';
     context.fillText('Epic Draw Duel', (canvas.width / 2) - 0 * canvasState.tileSize, canvas.height / 2 - 15 * canvasState.tileSize)
     context.strokeStyle = '#1ceb80';
@@ -174,7 +176,8 @@ const renderLobbyMenu = () => {
     // context.fillText('Epic Draw Duel', 100, 100)
 
 
-    context.font = 'bold 30px monospace';
+    // Font size of the menu items should also scale with resolution.
+    context.font = `bold ${Math.round(canvasState.tileSize * 2.5)}px monospace`;
 
     menuItems.filter(item => item.viewMode === canvasState.currentViewMode).forEach(item => {
         if (item.onload) item.onload();
