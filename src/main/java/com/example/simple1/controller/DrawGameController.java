@@ -1,6 +1,7 @@
 package com.example.simple1.controller;
 
 import com.example.simple1.drawgame.dto.DrawGameResponse.FetchLobbyAndGameStateResponse;
+import com.example.simple1.drawgame.dto.DrawGameResponse.ActiveLobbyDto;
 import com.example.simple1.exception.bad_request.BadRequestException;
 import com.example.simple1.service.DrawGameService;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,11 @@ public class DrawGameController {
     @PostMapping("/fetch-game-state")
     public FetchLobbyAndGameStateResponse fetchGameState(@Valid @RequestBody FetchGameStateRequest fetchGameStateRequest) {
         return drawGameService.fetchGameState(fetchGameStateRequest);
+    }
+
+    @GetMapping("/active-lobbies")
+    public List<ActiveLobbyDto> getActiveLobbies() {
+        return drawGameService.getActiveLobbies();
     }
 
     @Deprecated()
