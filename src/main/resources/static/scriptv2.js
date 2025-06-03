@@ -37,7 +37,7 @@ const gameState = {
     coords: null,
     playerScores: null,
     fetchGameStateInterval: null
-}
+};
 
 let activeLobbies = [];
 let lobbyButtons = [];
@@ -60,7 +60,7 @@ const playBeep = frequency => {
 const playTileClaimSound = () => playBeep(880);
 const playTileLostSound = () => playBeep(220);
 
-const menuItems = []
+const menuItems = [];
 
 
 const initializeMenuItems = () => {
