@@ -39,6 +39,9 @@ const gameState = {
     fetchGameStateInterval: null
 }
 
+let activeLobbies = [];
+let lobbyButtons = [];
+
 const playBeep = frequency => {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -187,6 +190,43 @@ const renderLobbyMenu = () => {
         context.strokeRect(item.x(), item.y(), item.width, item.height);
         context.fillText(item.text(), item.x() + item.width / 2, item.y() + item.height / 2);
     });
+
+    // active lobbies list
+    lobbyButtons = [];
+    context.textAlign = 'left';
+    let lY = canvas.height / 2 + canvasState.tileSize * 8;
+    const joinWidth = canvasState.tileSize * 6;
+    activeLobbies.forEach(lobby => {
+        const labelX = canvasState.tileSize * 2;
+        const joinX = canvas.width - joinWidth - canvasState.tileSize * 2;
+
+        // lobby label
+        context.beginPath();
+        context.fillStyle = 'black';
+        context.fillText(`ID ${lobby.lobbyId}: ${lobby.lobbyName} (${lobby.playerCount}/2)`, labelX, lY + canvasState.tileSize * 1.5);
+
+        // join button
+        context.beginPath();
+        context.fillStyle = '#bec2ed';
+        context.fillRect(joinX, lY, joinWidth, canvasState.tileSize * 3);
+        context.lineWidth = 4;
+        context.strokeStyle = 'black';
+        context.strokeRect(joinX, lY, joinWidth, canvasState.tileSize * 3);
+        context.fillStyle = 'black';
+        context.textAlign = 'center';
+        context.fillText('Join', joinX + joinWidth / 2, lY + canvasState.tileSize * 1.5);
+
+        lobbyButtons.push({
+            x: () => joinX,
+            y: () => lY,
+            width: joinWidth,
+            height: canvasState.tileSize * 3,
+            lobbyId: lobby.lobbyId
+        });
+
+        context.textAlign = 'left';
+        lY += canvasState.tileSize * 5;
+    });
 }
 
 const renderGameBackground = timestamp => {
@@ -228,6 +268,20 @@ const renderScore = () => {
     context.strokeStyle = 'black';
     context.lineWidth = 4;
     context.strokeRect(2, 2, bounding.width - 4, canvasState.topOffset - 4)
+
+    // Back button
+    const backX = canvas.width - canvasState.tileSize * 9;
+    context.beginPath();
+    context.fillStyle = '#bec2ed';
+    context.fillRect(backX, canvasState.tileSize, canvasState.tileSize * 8, canvasState.tileSize * 3);
+    context.strokeStyle = 'black';
+    context.lineWidth = 4;
+    context.strokeRect(backX, canvasState.tileSize, canvasState.tileSize * 8, canvasState.tileSize * 3);
+    context.font = `${Math.round(canvasState.tileSize * 2)}px monospace`;
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('Back', backX + canvasState.tileSize * 4, canvasState.tileSize * 2.5);
 
     let textX = canvasState.tileSize * 12;
     let textY = canvasState.tileSize * 3;
@@ -363,6 +417,12 @@ const fetchLobbyAndGameState = async () => {
         });
 }
 
+const fetchActiveLobbies = () => {
+    return fetch(SERVER_ADDRESS + '/epic-draw/active-lobbies')
+        .then(response => response.json())
+        .then(data => { activeLobbies = data; });
+}
+
 
 const fieldPlaceRequest = (updatedCoords) => {
     lobbyState.stompClient.send(
@@ -417,12 +477,27 @@ const handleMenuClick = event => {
         .filter(item => item.viewMode === canvasState.currentViewMode)
         .filter(item => isIntersect(pos, item))
         .forEach(item => item.onclick());
+
+    lobbyButtons
+        .filter(btn => isIntersect(pos, btn))
+        .forEach(btn => joinGameRequest(btn.lobbyId, canvasState.input.username));
 };
 
 const handleGameClick = event => {
     const bounding = canvas.getBoundingClientRect();
     const x = event.clientX - bounding.left;
     const y = event.clientY - bounding.top;
+
+    const backBox = {
+        x: canvas.width - canvasState.tileSize * 9,
+        y: canvasState.tileSize,
+        width: canvasState.tileSize * 8,
+        height: canvasState.tileSize * 3
+    };
+    if (x >= backBox.x && x <= backBox.x + backBox.width && y >= backBox.y && y <= backBox.y + backBox.height) {
+        handleLobbyLeave();
+        return;
+    }
 
     const col_idx = Math.floor(x / (4 * canvasState.tileSize));
     const row_idx = Math.floor((y - canvasState.topOffset) / (4 * canvasState.tileSize));
@@ -542,3 +617,6 @@ renderCanvas();
 
 window.addEventListener('resize', renderCanvas);
 canvas.addEventListener('click', handleMenuClick);
+
+fetchActiveLobbies();
+setInterval(fetchActiveLobbies, 5000);
