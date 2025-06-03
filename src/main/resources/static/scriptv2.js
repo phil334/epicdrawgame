@@ -194,6 +194,8 @@ const renderLobbyMenu = () => {
     // active lobbies list
     lobbyButtons = [];
     context.textAlign = 'left';
+    context.font = `bold ${Math.round(canvasState.tileSize * 2.5)}px monospace`;
+    context.fillText('Active Lobbies', canvasState.tileSize * 2, canvas.height / 2 + canvasState.tileSize * 6);
     let lY = canvas.height / 2 + canvasState.tileSize * 8;
     const joinWidth = canvasState.tileSize * 6;
     activeLobbies.forEach(lobby => {
@@ -270,7 +272,7 @@ const renderScore = () => {
     context.strokeRect(2, 2, bounding.width - 4, canvasState.topOffset - 4)
 
     // Back button
-    const backX = canvas.width - canvasState.tileSize * 9;
+    const backX = canvas.width - canvasState.tileSize * 11;
     context.beginPath();
     context.fillStyle = '#bec2ed';
     context.fillRect(backX, canvasState.tileSize, canvasState.tileSize * 8, canvasState.tileSize * 3);
@@ -489,7 +491,7 @@ const handleGameClick = event => {
     const y = event.clientY - bounding.top;
 
     const backBox = {
-        x: canvas.width - canvasState.tileSize * 9,
+        x: canvas.width - canvasState.tileSize * 11,
         y: canvasState.tileSize,
         width: canvasState.tileSize * 8,
         height: canvasState.tileSize * 3
