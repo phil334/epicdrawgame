@@ -39,6 +39,24 @@ const gameState = {
     fetchGameStateInterval: null
 }
 
+const playBeep = frequency => {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const oscillator = ctx.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = frequency;
+    oscillator.connect(ctx.destination);
+    oscillator.start();
+    setTimeout(() => {
+        oscillator.stop();
+        ctx.close();
+    }, 150);
+};
+
+const playTileClaimSound = () => playBeep(880);
+const playTileLostSound = () => playBeep(220);
+
 const menuItems = []
 
 
@@ -415,14 +433,19 @@ const handleGameClick = event => {
         return;
     }
 
-    fieldPlaceRequest([{'row': row_idx, 'col': col_idx}])
+    fieldPlaceRequest([{ 'row': row_idx, 'col': col_idx }]);
+    playTileClaimSound();
 };
 
 const handleGameStateUpdateMessage = message => {
     // TODO wait for fetchLobbyAndGameState to be complete
     const messageBody = JSON.parse(message.body);
     for (let updatedCoord of messageBody.updatedCoords) {
+        const prevVal = gameState.coords[updatedCoord.row][updatedCoord.col];
         gameState.coords[updatedCoord.row][updatedCoord.col] = updatedCoord.value;
+        if (prevVal === lobbyState.playerId && updatedCoord.value !== lobbyState.playerId) {
+            playTileLostSound();
+        }
     }
     gameState.playerScores = messageBody.playerScores;
 }
