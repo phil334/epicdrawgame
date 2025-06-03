@@ -118,6 +118,31 @@ public class DrawGameService {
         }
     }
 
+    public void useAbility(UseAbilityRequest useAbilityRequest) {
+        Integer lobbyId = playerSecretToLobbyId.get(useAbilityRequest.secret());
+        if (lobbyId == null) {
+            throw new BadRequestException("The provided secret doesn't belong to any active lobby!");
+        }
+
+        verifyLobbyId(lobbyId);
+        DrawGame drawGame = lobbyIdToGame.get(lobbyId);
+
+        if (drawGame.isGameIsOver()) return;
+
+        Integer playerId = playerSecretToPlayerId.get(useAbilityRequest.secret());
+        if (playerId == null) {
+            throw new BadRequestException("The provided secret does not have a playerId!");
+        }
+
+        List<UpdatedCoordDto> updatedCoords = drawGame.useSpecialAbility(playerId, useAbilityRequest.row(), useAbilityRequest.col());
+        GameStateUpdateResponse gameStateUpdateResponse = new GameStateUpdateResponse(updatedCoords, drawGame.getPlayerScores());
+
+        sendToAllLobbyPlayers(drawGame, "/queue/game-coords-update", gameStateUpdateResponse);
+        if (drawGame.isGameIsOver()) {
+            sendToAllLobbyPlayers(drawGame, "/queue/lobby-state", drawGame.getLobbyStateResponse());
+        }
+    }
+
     public void verifyLobbyId(Integer lobbyId) {
         if (lobbyId == null || !lobbyIdToGame.containsKey(lobbyId)) {
             throw new BadRequestException("LobbyId '%d' has not been found!".formatted(lobbyId));

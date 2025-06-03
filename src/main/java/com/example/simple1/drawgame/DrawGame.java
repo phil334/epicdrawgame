@@ -4,6 +4,7 @@ import com.example.simple1.drawgame.dto.DrawGameResponse.DrawGamePlayerDto;
 import com.example.simple1.drawgame.dto.DrawGameResponse.FetchLobbyAndGameStateResponse;
 import com.example.simple1.drawgame.dto.DrawGameResponse.LobbyStateResponse;
 import com.example.simple1.drawgame.dto.DrawGameResponse.PlayerScoreDto;
+import com.example.simple1.drawgame.dto.DrawGameResponse.UpdatedCoordDto;
 import com.example.simple1.exception.bad_request.BadRequestException;
 
 import java.util.ArrayList;
@@ -29,6 +30,9 @@ public class DrawGame {
     private int player2Fields;
     private boolean gameIsOver;
     private int winnerPlayerId;
+
+    private static final long ABILITY_COOLDOWN_MS = 10_000;
+    private final long[] abilityLastUsed = new long[]{0, 0};
 
     public DrawGame(int gameId, String lobbyName) {
         this.gameId = gameId;
@@ -115,6 +119,27 @@ public class DrawGame {
             playerScores.add(new PlayerScoreDto(players[1].id(), (double) player2Fields / TOTAL_FIELDS));
         }
         return playerScores;
+    }
+
+    public synchronized List<UpdatedCoordDto> useSpecialAbility(int playerId, int centerRow, int centerCol) {
+        if (playerId != 1 && playerId != 2) {
+            throw new BadRequestException("player with id '%d' is not allowed to use ability in lobby '%d'".formatted(playerId, gameId));
+        }
+        if (System.currentTimeMillis() - abilityLastUsed[playerId - 1] < ABILITY_COOLDOWN_MS) {
+            throw new BadRequestException("Ability is still on cooldown for player '%d' in lobby '%d'".formatted(playerId, gameId));
+        }
+        abilityLastUsed[playerId - 1] = System.currentTimeMillis();
+
+        List<UpdatedCoordDto> updates = new ArrayList<>();
+        for (int r = centerRow - 1; r <= centerRow + 1; r++) {
+            for (int c = centerCol - 1; c <= centerCol + 1; c++) {
+                if (r < 0 || c < 0 || r >= coords.length || c >= coords[0].length) continue;
+                if (coords[r][c] == playerId) continue;
+                changeCoord(playerId, r, c);
+                updates.add(new UpdatedCoordDto(r, c, playerId));
+            }
+        }
+        return updates;
     }
 
     public synchronized int getGameId() {

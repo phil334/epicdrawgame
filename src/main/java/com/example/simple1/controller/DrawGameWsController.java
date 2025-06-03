@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import static com.example.simple1.drawgame.dto.DrawGameRequests.FieldPlacementRequest;
+import static com.example.simple1.drawgame.dto.DrawGameRequests.UseAbilityRequest;
 
 @Controller
 public class DrawGameWsController {
@@ -22,5 +23,10 @@ public class DrawGameWsController {
     @MessageMapping("/field-placement")
     public void fieldPlacement(@Valid @RequestBody FieldPlacementRequest fieldPlacementRequest) {
         drawGameService.fieldPlacement(fieldPlacementRequest);
+    }
+
+    @MessageMapping("/use-ability")
+    public void useAbility(@Valid @RequestBody UseAbilityRequest useAbilityRequest) {
+        drawGameService.useAbility(useAbilityRequest);
     }
 }

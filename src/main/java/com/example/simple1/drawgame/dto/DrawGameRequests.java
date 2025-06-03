@@ -43,6 +43,14 @@ public class DrawGameRequests {
     ) {
     }
 
+    public record UseAbilityRequest(
+            @NotNull Integer row,
+            @NotNull Integer col,
+
+            @NotNull @Size(max = 100) String secret
+    ) {
+    }
+
     public record CoordDto(
             @NotNull Integer row,
             @NotNull Integer col

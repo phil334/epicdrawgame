@@ -399,7 +399,15 @@ const fieldPlaceRequest = (updatedCoords) => {
         {},
         JSON.stringify({updatedCoords, secret: lobbyState.playerSecret})
     );
-}
+};
+
+const abilityRequest = (row, col) => {
+    lobbyState.stompClient.send(
+        "/app/use-ability",
+        {},
+        JSON.stringify({row, col, secret: lobbyState.playerSecret})
+    );
+};
 
 
 // TODO only render updates
@@ -483,20 +491,9 @@ const handleSpecialAbility = event => {
         return;
     }
 
-    const updates = [];
-    for (let r = row_idx - 1; r <= row_idx + 1; r++) {
-        for (let c = col_idx - 1; c <= col_idx + 1; c++) {
-            if (r < 0 || c < 0 || r >= gameState.coords.length || c >= gameState.coords[0].length) continue;
-            if (gameState.coords[r][c] === lobbyState.playerId) continue;
-            updates.push({row: r, col: c});
-        }
-    }
-
-    if (updates.length > 0) {
-        fieldPlaceRequest(updates);
-        abilityState.lastUsed = Date.now();
-        playTileClaimSound();
-    }
+    abilityRequest(row_idx, col_idx);
+    abilityState.lastUsed = Date.now();
+    playTileClaimSound();
 };
 
 const handleGameStateUpdateMessage = message => {
