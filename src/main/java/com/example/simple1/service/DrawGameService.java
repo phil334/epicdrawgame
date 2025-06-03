@@ -6,6 +6,7 @@ import com.example.simple1.drawgame.dto.DrawGameResponse.DrawGamePlayerDto;
 import com.example.simple1.drawgame.dto.DrawGameResponse.FetchLobbyAndGameStateResponse;
 import com.example.simple1.drawgame.dto.DrawGameResponse.GameStateUpdateResponse;
 import com.example.simple1.drawgame.dto.DrawGameResponse.UpdatedCoordDto;
+import com.example.simple1.drawgame.dto.DrawGameResponse.ActiveLobbyDto;
 import com.example.simple1.exception.bad_request.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -122,6 +123,12 @@ public class DrawGameService {
         if (lobbyId == null || !lobbyIdToGame.containsKey(lobbyId)) {
             throw new BadRequestException("LobbyId '%d' has not been found!".formatted(lobbyId));
         }
+    }
+
+    public List<ActiveLobbyDto> getActiveLobbies() {
+        return lobbyIdToGame.values().stream()
+                .map(game -> new ActiveLobbyDto(game.getGameId(), game.getLobbyName(), game.getPlayers().size()))
+                .toList();
     }
 
     private GameEnterResponse addPlayer(DrawGame drawGame, String playerName) {
